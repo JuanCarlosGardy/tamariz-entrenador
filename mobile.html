@@ -4,6 +4,16 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Entrenador de Memoria – Mnemónica (Tamariz)</title>
+
+  <!-- “Modo app” (instalable) -->
+  <meta name="theme-color" content="#0b1220">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Tamariz">
+  <meta name="mobile-web-app-capable" content="yes">
+  <!-- Si aún no tienes manifest.json, no pasa nada, el HTML funciona igual -->
+  <link rel="manifest" href="manifest.json">
+
   <style>
     :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
     body { margin: 0; background: #0b1220; color: #e6edf6; }
@@ -40,28 +50,56 @@
     .hint { font-size: 12px; opacity:.85; line-height: 1.35; }
     .focusHint { font-size: 12px; opacity:.85; margin-top:8px; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-/* ====== Mobile clean (solo para mobile.html) ====== */
-@media (max-width: 860px){
-  .wrap { padding: 12px; }
-  .grid { grid-template-columns: 1fr; }
-  h1 { font-size: 16px; }
-  .big { font-size: 38px; }
-  .row { gap: 8px; }
-  .row > * { min-width: 100%; }
 
-  /* Oculta el panel derecho completo (Mnemónica + Estadísticas) en móvil */
-  .grid > .card:nth-child(2){ display:none; }
+    /* ====== Mobile clean + “modo app” (solo en móvil) ====== */
+    @media (max-width: 860px){
+      .wrap { padding: 12px; }
+      .grid { grid-template-columns: 1fr; }
+      h1 { font-size: 16px; }
+      .big { font-size: 40px; }
+      .row { gap: 8px; }
+      .row > * { min-width: 100%; }
 
-  /* Botones más grandes y fáciles de pulsar */
-  button, input, select { padding: 14px 14px; font-size: 16px; border-radius: 14px; }
-  #answer { height: 52px; font-size: 18px; }
+      /* Oculta el panel derecho completo (Mnemónica + Estadísticas) */
+      .grid > .card:nth-child(2){ display:none; }
 
-  /* Botones en columna (más cómodo) */
-  .card .row[style*="margin-top:10px"] { flex-direction: column; }
-}
+      /* Oculta la “píldora” de atajos arriba para limpiar */
+      .pill { display:none; }
 
+      /* Oculta la ayuda larga de notación para dejarlo tipo app */
+      .hint { display:none; }
+
+      /* Botones/inputs más cómodos */
+      button, input, select { padding: 14px 14px; font-size: 16px; border-radius: 14px; }
+      #answer { height: 52px; font-size: 18px; }
+
+      /* Ocultamos los botones “normales” del card, porque usaremos la barra fija inferior */
+      .card .row[style*="margin-top:10px"] { display:none; }
+
+      /* Espacio para que la barra inferior no tape contenido */
+      body{ padding-bottom: 140px; }
+    }
+
+    /* ====== Barra inferior fija (modo app) ====== */
+    .appBar{
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(11,18,32,.92);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid #223154;
+      z-index: 9999;
+    }
+    .appBar .row{ gap: 10px; }
+    .appBar button{
+      min-height: 52px;
+      border-radius: 14px;
+      font-size: 16px;
+      padding: 14px 12px;
+    }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <div class="row" style="align-items:center; justify-content:space-between;">
@@ -79,7 +117,7 @@
             <select id="mode">
               <option value="numToCard">Número → Carta</option>
               <option value="cardToNum">Carta → Número</option>
-              <option value="mixed">Mixto (aleatorio)</option>
+              <option value="mixed" selected>Mixto (aleatorio)</option>
               <option value="streak">Racha (mixto, falla = fin)</option>
               <option value="review">Repaso fallos (prioriza lo fallado)</option>
             </select>
@@ -87,7 +125,7 @@
           <div>
             <label>Dificultad</label>
             <select id="difficulty">
-              <option value="all">1–52 (toda la baraja)</option>
+              <option value="all" selected>1–52 (toda la baraja)</option>
               <option value="1-26">1–26</option>
               <option value="27-52">27–52</option>
               <option value="custom">Rango personalizado</option>
@@ -113,11 +151,12 @@
         <label id="answerLabel">Tu respuesta</label>
         <input id="answer" autocomplete="off" placeholder="Escribe y pulsa Enter" />
 
+        <!-- Botonera normal (en móvil la ocultamos y usamos la appBar) -->
         <div class="row" style="margin-top:10px;">
-          <button id="checkBtn">Validar (Enter)</button>
-          <button id="nextBtn">Siguiente (N)</button>
-          <button id="revealBtn">Mostrar solución</button>
-          <button id="resetBtn">Reset (R)</button>
+          <button id="checkBtn" type="button">Validar (Enter)</button>
+          <button id="nextBtn" type="button">Siguiente (N)</button>
+          <button id="revealBtn" type="button">Mostrar solución</button>
+          <button id="resetBtn" type="button">Reset (R)</button>
         </div>
 
         <div id="feedback" style="margin-top:10px; font-size:14px;"></div>
@@ -129,31 +168,31 @@
         </div>
       </div>
 
+      <!-- Panel derecho (en móvil lo ocultamos por CSS) -->
       <div class="card">
         <h2>Mnemónica + Estadísticas</h2>
 
         <div class="row" style="margin-top:6px;">
-  <button id="toggleConfigBtn">Mostrar configuración</button>
-</div>
+          <button id="toggleConfigBtn" type="button">Mostrar configuración</button>
+        </div>
 
-<div id="configPanel" style="display:none; margin-top:10px;">
-  <label>Importar orden (52 cartas)</label>
-  <textarea id="mnemonicInput" placeholder="Pega aquí el orden (52 cartas). Separadas por comas o una por línea."></textarea>
+        <div id="configPanel" style="display:none; margin-top:10px;">
+          <label>Importar orden (52 cartas)</label>
+          <textarea id="mnemonicInput" placeholder="Pega aquí el orden (52 cartas). Separadas por comas o una por línea."></textarea>
 
-  <div class="focusHint">
-    Importante: haz clic dentro del cuadro antes de pegar, para que no se pegue texto fuera. Si se te pega fuera, recarga la página.
-  </div>
+          <div class="focusHint">
+            Importante: haz clic dentro del cuadro antes de pegar, para que no se pegue texto fuera. Si se te pega fuera, recarga la página.
+          </div>
 
-  <div class="row" style="margin-top:10px;">
-    <button id="loadBtn">Cargar mnemónica</button>
-    <button id="loadTamarizBtn">Cargar Tamariz (por defecto)</button>
-  </div>
-</div>
+          <div class="row" style="margin-top:10px;">
+            <button id="loadBtn" type="button">Cargar mnemónica</button>
+            <button id="loadTamarizBtn" type="button">Cargar Tamariz (por defecto)</button>
+          </div>
+        </div>
 
-<div class="row" style="margin-top:10px;">
-  <button id="resetStatsBtn">Reset estadísticas</button>
-</div>
-
+        <div class="row" style="margin-top:10px;">
+          <button id="resetStatsBtn" type="button">Reset estadísticas</button>
+        </div>
 
         <div class="stats">
           <div class="stat"><span class="muted">Aciertos</span><b id="okCount">0</b></div>
@@ -175,54 +214,63 @@
     </div>
   </div>
 
+  <!-- Barra inferior fija (modo app) -->
+  <div class="appBar">
+    <div class="row">
+      <button id="checkBtn2" type="button">Validar</button>
+      <button id="nextBtn2" type="button">Siguiente</button>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button id="revealBtn2" type="button">Solución</button>
+      <button id="resetBtn2" type="button">Reset</button>
+    </div>
+  </div>
+
 <script>
 (() => {
   // ---------------------------------------------
-  // 1) Mnemónica Tamariz (extraída de tu imagen)
+  // Mnemónica Tamariz
   // Notación interna: P/C/T/R
   // ---------------------------------------------
-const TAMARIZ_STACK = [
-  "4T","2C","7R","3T","4C","6R","AP","5C","9P","2P","QC","3R","QT",
-  "8C","6P","5P","9C","KT","2R","JC","3P","8P","6C","10T","5R","KP",
-  "2T","3C","8R","5T","KP","JR","8T","10P","KC","JT","7P","10C","AR",
-  "4P","7C","4R","AT","9T","JP","QR","7T","QP","10R","6T","AC","9R"
-];
+  const TAMARIZ_STACK = [
+    "4T","2C","7R","3T","4C","6R","AP","5C","9P","2P","QC","3R","QT",
+    "8C","6P","5P","9C","KT","2R","JC","3P","8P","6C","10T","5R","KP",
+    "2T","3C","8R","5T","KP","JR","8T","10P","KC","JT","7P","10C","AR",
+    "4P","7C","4R","AT","9T","JP","QR","7T","QP","10R","6T","AC","9R"
+  ];
 
+  // -----------------------------
+  // Utilidades de cartas
+  // -----------------------------
+  const normalizeCard = (s) => {
+    if (!s) return "";
 
-// -----------------------------
-// Utilidades de cartas
-// -----------------------------
-const normalizeCard = (s) => {
-  if (!s) return "";
+    const raw = String(s).trim().toUpperCase().replace(/\s+/g, "");
+    const hadSymbols = /[♠♥♦♣]/.test(raw);
 
-  const raw = String(s).trim().toUpperCase().replace(/\s+/g, "");
-  const hadSymbols = /[♠♥♦♣]/.test(raw);
+    let x = raw
+      .replace(/♠/g, "S")
+      .replace(/♥/g, "H")
+      .replace(/♦/g, "D")
+      .replace(/♣/g, "C");
 
-  let x = raw
-    .replace(/♠/g, "S")
-    .replace(/♥/g, "H")
-    .replace(/♦/g, "D")
-    .replace(/♣/g, "C");
+    // Detecta notación inglesa SOLO si venían símbolos o si termina en S/H/D
+    // (Evita confundir tu C de Corazones)
+    const looksEnglish = hadSymbols || /[SHD]$/.test(x);
 
-  // OJO: detecta notación inglesa SOLO si venían símbolos o si termina en S/H/D (evita confundir tu C de Corazones)
-  const looksEnglish = hadSymbols || /[SHD]$/.test(x);
+    if (looksEnglish) {
+      x = x
+        .replace(/S$/, "P")
+        .replace(/H$/, "C")
+        .replace(/C$/, "T")
+        .replace(/D$/, "R");
+    }
 
-  if (looksEnglish) {
-    x = x
-      .replace(/S$/, "P")
-      .replace(/H$/, "C")
-      .replace(/C$/, "T")
-      .replace(/D$/, "R");
-  }
+    // Si el usuario escribe diamantes como D en tu sistema, lo pasamos a R
+    x = x.replace(/D$/, "R");
 
-  // Si el usuario escribe diamantes como D en tu sistema, lo pasamos a R
-  x = x.replace(/D$/, "R");
-
-  return x;
-};
-
-  // ... tu código abajo
-
+    return x;
+  };
 
   const parseMnemonic = (raw) => {
     const cleaned = String(raw || "").trim();
@@ -230,12 +278,10 @@ const normalizeCard = (s) => {
     const parts = cleaned.includes(",")
       ? cleaned.split(",")
       : cleaned.split(/\r?\n/);
-
     return parts.map(normalizeCard).filter(Boolean);
   };
 
   const isValidCard = (c) => {
-    // Formato: A,2-10,J,Q,K + (P,C,T,R)
     const m = c.match(/^(A|[2-9]|10|J|Q|K)(P|C|T|R)$/);
     return !!m;
   };
@@ -245,13 +291,13 @@ const normalizeCard = (s) => {
   // -----------------------------
   // Estado
   // -----------------------------
-  let mnemonic = [];        // index 0..51 => carta
-  let cardToPos = new Map();// carta => posición 1..52
-  let current = null;       // { mode, pos, card }
+  let mnemonic = [];
+  let cardToPos = new Map();
+  let current = null;
   let startedAt = null;
   let ok = 0, bad = 0;
-  let times = [];           // ms
-  let wrongWeights = new Map(); // key => weight
+  let times = [];
+  let wrongWeights = new Map();
   let streak = 0;
   let streakBest = 0;
 
@@ -279,7 +325,47 @@ const normalizeCard = (s) => {
   // -----------------------------
   // Persistencia local
   // -----------------------------
-  const STORAGE_KEY = "tamariz_mnemonic_trainer_v3_PCTR";
+  const STORAGE_KEY = "tamariz_mnemonic_trainer_mobile_v1_PCTR";
+
+  const rebuildMaps = () => {
+    cardToPos = new Map();
+    mnemonic.forEach((c, i) => cardToPos.set(c, i+1));
+  };
+
+  const updateLoadedInfo = () => {
+    if (!loadedInfo) return;
+    if (mnemonic.length !== 52) {
+      loadedInfo.textContent = "Stack cargado: ninguno (carga Tamariz o pega tu orden).";
+      return;
+    }
+    loadedInfo.textContent = "Stack cargado: 52 cartas. Notación: P/C/T/R.";
+  };
+
+  const updateStats = () => {
+    if (!okCount || !badCount || !pctEl || !avgTimeEl) return;
+    okCount.textContent = String(ok);
+    badCount.textContent = String(bad);
+    const total = ok + bad;
+    pctEl.textContent = total ? `${Math.round((ok/total)*100)}%` : "0%";
+    if (times.length) {
+      const avg = times.reduce((a,b)=>a+b,0) / times.length;
+      avgTimeEl.textContent = `${(avg/1000).toFixed(2)}s`;
+    } else {
+      avgTimeEl.textContent = "—";
+    }
+  };
+
+  const saveState = () => {
+    const data = {
+      mnemonic,
+      ok, bad,
+      times: times.slice(-500),
+      wrongWeights: Array.from(wrongWeights.entries()),
+      streakBest
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  };
+
   const loadState = () => {
     try{
       const s = localStorage.getItem(STORAGE_KEY);
@@ -299,36 +385,13 @@ const normalizeCard = (s) => {
     }catch(e){}
   };
 
-  const saveState = () => {
-    const data = {
-      mnemonic,
-      ok, bad,
-      times: times.slice(-500),
-      wrongWeights: Array.from(wrongWeights.entries()),
-      streakBest
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  };
-
   // -----------------------------
-  // Lógica principal
+  // Rango / selección
   // -----------------------------
-  const rebuildMaps = () => {
-    cardToPos = new Map();
-    mnemonic.forEach((c, i) => cardToPos.set(c, i+1));
-  };
-
-  const updateLoadedInfo = () => {
-    if (mnemonic.length !== 52) {
-      loadedInfo.textContent = "Stack cargado: ninguno (carga Tamariz o pega tu orden).";
-      return;
-    }
-    loadedInfo.textContent = "Stack cargado: 52 cartas. Notación: P/C/T/R.";
-  };
-
   const getRange = () => {
     let a = 1, b = 52;
     const d = diffEl.value;
+
     if (d === "1-26") { a = 1; b = 26; }
     else if (d === "27-52") { a = 27; b = 52; }
     else if (d === "custom") {
@@ -351,6 +414,7 @@ const normalizeCard = (s) => {
     const { a, b } = getRange();
     const items = [];
     let total = 0;
+
     for (let pos = a; pos <= b; pos++) {
       const card = mnemonic[pos-1];
       const key1 = `P:${pos}`;
@@ -359,6 +423,7 @@ const normalizeCard = (s) => {
       items.push({ pos, w });
       total += w;
     }
+
     let r = Math.random() * total;
     for (const it of items) {
       r -= it.w;
@@ -367,10 +432,13 @@ const normalizeCard = (s) => {
     return items[items.length-1].pos;
   };
 
+  // -----------------------------
+  // Preguntas
+  // -----------------------------
   const nextQuestion = () => {
     if (mnemonic.length !== 52) {
       promptText.textContent = "Carga tu mnemónica (52 cartas)";
-      promptSub.textContent = "Pega el orden a la derecha y pulsa “Cargar mnemónica” o usa “Cargar Tamariz”.";
+      promptSub.textContent = "Pulsa “Cargar Tamariz” o pega tu orden en configuración.";
       feedbackEl.textContent = "";
       answerEl.value = "";
       answerEl.disabled = true;
@@ -420,65 +488,61 @@ const normalizeCard = (s) => {
     }
   };
 
- const checkAnswer = () => {
-  if (!current) return;
+  const checkAnswer = () => {
+    if (!current) return;
 
-  const elapsed = performance.now() - startedAt;
-  const raw = answerEl.value;
+    const elapsed = performance.now() - startedAt;
+    const raw = answerEl.value;
 
-  let isCorrect = false;
+    let isCorrect = false;
 
-  if (current.mode === "numToCard") {
-    const a = normalizeCard(raw);
-    isCorrect = (a === current.card);
-  } else {
-    const n = parseInt(String(raw).trim(), 10);
-    isCorrect = (n === current.pos);
-  }
-
-  if (isCorrect) {
-    ok++;
-    times.push(elapsed);
-
-    feedbackEl.innerHTML =
-      `<span class="ok">Correcto.</span> <span class="muted">(${(elapsed/1000).toFixed(2)}s)</span>`;
-
-    if (modeEl.value === "streak") {
-      streak++;
-      streakBest = Math.max(streakBest, streak);
+    if (current.mode === "numToCard") {
+      const a = normalizeCard(raw);
+      isCorrect = (a === current.card);
+    } else {
+      const n = parseInt(String(raw).trim(), 10);
+      isCorrect = (n === current.pos);
     }
 
-    decayWeights();
+    if (isCorrect) {
+      ok++;
+      times.push(elapsed);
+
+      feedbackEl.innerHTML =
+        `<span class="ok">Correcto.</span> <span class="muted">(${(elapsed/1000).toFixed(2)}s)</span>`;
+
+      if (modeEl.value === "streak") {
+        streak++;
+        streakBest = Math.max(streakBest, streak);
+      }
+
+      decayWeights();
+      updateStats();
+      saveState();
+
+      // Avanza automáticamente
+      setTimeout(() => nextQuestion(), 450);
+      return;
+    }
+
+    // Fallo
+    bad++;
+    addWrongWeight(current.pos, current.card);
+
+    const show = current.mode === "numToCard"
+      ? `La correcta era: <b>${current.card}</b>`
+      : `La correcta era: <b>${current.pos}</b>`;
+
+    feedbackEl.innerHTML = `<span class="bad">Fallo.</span> ${show}`;
+
+    if (modeEl.value === "streak") {
+      feedbackEl.innerHTML += ` <span class="muted">Racha: ${streak} (mejor: ${streakBest})</span>`;
+      streak = 0;
+    }
 
     updateStats();
     saveState();
-
-    // Avanza automáticamente si es correcta
-    setTimeout(() => {
-      nextQuestion();
-    }, 500);
-
-    return; // importantísimo para no seguir ejecutando
-  }
-
-  // Fallo
-  bad++;
-  addWrongWeight(current.pos, current.card);
-
-  const show = current.mode === "numToCard"
-    ? `La correcta era: <b>${current.card}</b>`
-    : `La correcta era: <b>${current.pos}</b>`;
-
-  feedbackEl.innerHTML = `<span class="bad">Fallo.</span> ${show}`;
-
-  if (modeEl.value === "streak") {
-    feedbackEl.innerHTML += ` <span class="muted">Racha: ${streak} (mejor: ${streakBest})</span>`;
-    streak = 0;
-  }
-
-  updateStats();
-  saveState();
-};
+  };
 
   const reveal = () => {
     if (!current) return;
@@ -486,19 +550,6 @@ const normalizeCard = (s) => {
       ? `Solución: <b>${current.card}</b>`
       : `Solución: <b>${current.pos}</b>`;
     feedbackEl.innerHTML = show;
-  };
-
-  const updateStats = () => {
-    okCount.textContent = String(ok);
-    badCount.textContent = String(bad);
-    const total = ok + bad;
-    pctEl.textContent = total ? `${Math.round((ok/total)*100)}%` : "0%";
-    if (times.length) {
-      const avg = times.reduce((a,b)=>a+b,0) / times.length;
-      avgTimeEl.textContent = `${(avg/1000).toFixed(2)}s`;
-    } else {
-      avgTimeEl.textContent = "—";
-    }
   };
 
   const resetAll = () => {
@@ -541,7 +592,7 @@ const normalizeCard = (s) => {
 
   const loadTamariz = () => {
     mnemonic = TAMARIZ_STACK.slice();
-    mnemonicInput.value = TAMARIZ_STACK.join(", ");
+    if (mnemonicInput) mnemonicInput.value = TAMARIZ_STACK.join(", ");
     rebuildMaps();
     updateLoadedInfo();
     saveState();
@@ -556,69 +607,68 @@ const normalizeCard = (s) => {
     saveState();
   };
 
-// ------------------------------
-// Eventos / Atajos (ROBUSTO: no rompe si falta algún ID)
-// ------------------------------
-const on = (id, evt, handler) => {
-  const el = document.getElementById(id);
-  if (!el) {
-    console.warn(`No existe el elemento #${id} (listener omitido)`);
-    return;
-  }
-  el.addEventListener(evt, handler);
-};
+  // -----------------------------
+  // Eventos (robusto)
+  // -----------------------------
+  const on = (id, evt, handler) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener(evt, handler);
+  };
 
-// Mostrar / ocultar panel de configuración (para no enseñar la mnemónica)
-(() => {
-  const configPanel = document.getElementById("configPanel");
-  const toggleBtn = document.getElementById("toggleConfigBtn");
+  // Toggle config (panel derecho)
+  (() => {
+    const configPanel = $("configPanel");
+    const toggleBtn = $("toggleConfigBtn");
+    if (!configPanel || !toggleBtn) return;
 
-  if (!configPanel || !toggleBtn) {
-    console.warn("Falta #configPanel o #toggleConfigBtn (no se aplica toggle).");
-    return;
-  }
+    if (!configPanel.style.display) configPanel.style.display = "none";
+    toggleBtn.textContent = (configPanel.style.display === "none")
+      ? "Mostrar configuración"
+      : "Ocultar configuración";
 
-  // Asegura estado inicial oculto
-  if (!configPanel.style.display) configPanel.style.display = "none";
-  toggleBtn.textContent = (configPanel.style.display === "none")
-    ? "Mostrar configuración"
-    : "Ocultar configuración";
+    toggleBtn.addEventListener("click", () => {
+      const isHidden = configPanel.style.display === "none";
+      configPanel.style.display = isHidden ? "block" : "none";
+      toggleBtn.textContent = isHidden ? "Ocultar configuración" : "Mostrar configuración";
+    });
+  })();
 
-  toggleBtn.addEventListener("click", () => {
-    const isHidden = configPanel.style.display === "none";
-    configPanel.style.display = isHidden ? "block" : "none";
-    toggleBtn.textContent = isHidden ? "Ocultar configuración" : "Mostrar configuración";
-  });
-})();
+  // Cambios de modo/dificultad/rango -> nueva pregunta
+  on("mode", "change", () => nextQuestion());
+  on("difficulty", "change", () => nextQuestion());
+  on("rangeFrom", "change", () => nextQuestion());
+  on("rangeTo", "change", () => nextQuestion());
 
-// Al cambiar modo/dificultad/rango, genera nueva pregunta
-on("mode", "change", () => nextQuestion());
-on("difficulty", "change", () => nextQuestion());
-on("rangeFrom", "change", () => nextQuestion());
-on("rangeTo", "change", () => nextQuestion());
+  // Botones normales (desktop)
+  on("loadBtn", "click", () => loadMnemonicFromTextarea());
+  on("loadTamarizBtn", "click", () => loadTamariz());
+  on("resetStatsBtn", "click", () => resetStatsOnly());
 
-// Botones principales
-on("loadBtn", "click", () => loadMnemonicFromTextarea());
-on("loadTamarizBtn", "click", () => loadTamariz());
-on("resetStatsBtn", "click", () => resetStatsOnly());
+  on("checkBtn", "click", () => checkAnswer());
+  on("nextBtn", "click", () => nextQuestion());
+  on("revealBtn", "click", () => reveal());
+  on("resetBtn", "click", () => resetAll());
 
-on("checkBtn", "click", () => checkAnswer());
-on("nextBtn", "click", () => nextQuestion());
-on("revealBtn", "click", () => reveal());
-on("resetBtn", "click", () => resetAll());
+  // Botones barra inferior (móvil)
+  on("checkBtn2", "click", () => checkAnswer());
+  on("nextBtn2", "click", () => nextQuestion());
+  on("revealBtn2", "click", () => reveal());
+  on("resetBtn2", "click", () => resetAll());
 
-
+  // Enter en input
   answerEl.addEventListener("keydown", (e) => {
     if (e.key === "Enter") checkAnswer();
   });
 
+  // Atajos globales (si no estás escribiendo)
   window.addEventListener("keydown", (e) => {
     if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT")) return;
     if (e.key.toLowerCase() === "n") nextQuestion();
     if (e.key.toLowerCase() === "r") resetAll();
   });
 
-  // Inicio: intenta cargar estado guardado; si no hay, carga Tamariz
+  // Inicio
   loadState();
   if (mnemonic.length !== 52) loadTamariz();
   updateStats();
