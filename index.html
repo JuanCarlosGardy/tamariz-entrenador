@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="es">
 <head>
@@ -163,7 +164,7 @@
   // ---------------------------------------------
 const TAMARIZ_STACK = [
   "4T","2C","7R","3T","4C","6R","AP","5C","9P","2P","QC","3R","QT",
-  "8C","6P","5P","9C","KT","2R","JC","3P","8P","6C","10T","5R","KP",
+  "8C","6P","5P","9C","KT","2R","JC","3P","8P","6C","10T","5R","KR",
   "2T","3C","8R","5T","KP","JR","8T","10P","KC","JT","7P","10C","AR",
   "4P","7C","4R","AT","9T","JP","QR","7T","QP","10R","6T","AC","9R"
 ];
@@ -259,7 +260,7 @@ const normalizeCard = (s) => {
   // -----------------------------
   // Persistencia local
   // -----------------------------
-  const STORAGE_KEY = "tamariz_mnemonic_trainer_v3_PCTR";
+  const STORAGE_KEY = "tamariz_mnemonic_trainer_v4_PCTR";
   const loadState = () => {
     try{
       const s = localStorage.getItem(STORAGE_KEY);
